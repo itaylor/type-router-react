@@ -12,9 +12,9 @@ import type {
 import { createRouter } from '../type-router/type-router.ts';
 export { makeRoute } from '../type-router/type-router.ts';
 import {
-  ComponentPropsWithoutRef,
+  type ComponentPropsWithoutRef,
   createContext,
-  ReactNode,
+  type ReactNode,
   useContext,
   useEffect,
   useMemo,
@@ -41,13 +41,18 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
   options: Partial<Options<R>>,
 ) {
   type Path = R[number]['path'];
-  const realizedRoutes = realizeComponentRoutes(routes);
-  const router = createRouter<R>(realizedRoutes, options);
-  const RouterContext = createContext<RouterContextValue<R> | null>(null);
   let setActiveViewComponentOuter: React.Dispatch<
     React.SetStateAction<React.FC<ParamsFor<R[number]['path']>> | null>
   >;
-  let initialActiveViewComponent: React.FC<ParamsFor<R[number]['path']>> | null;
+  let initialActiveViewComponent:
+    | React.FC<ParamsFor<R[number]['path']>>
+    | null = null;
+  const realizedRoutes = realizeComponentRoutes(routes);
+  const router = createRouter<R>(realizedRoutes, {
+    ...options,
+    autoInit: false,
+  });
+  const RouterContext = createContext<RouterContextValue<R> | null>(null);
 
   function RouterProvider({ children }: { children: React.ReactNode }) {
     const [currentRoute, setCurrentRoute] = useState(router.getState());
@@ -65,7 +70,10 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
       [router, activeViewComponent, currentRoute],
     );
 
-    useEffect(() => router.subscribe(setCurrentRoute), [router]);
+    useEffect(() => {
+      router.init();
+      return router.subscribe(setCurrentRoute);
+    }, [router]);
     return (
       <RouterContext.Provider value={contextValue}>
         {children}
@@ -77,7 +85,8 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     component: React.FC<ParamsFor<R[number]['path']>> | null,
   ) {
     if (setActiveViewComponentOuter) {
-      setActiveViewComponentOuter(component);
+      // React useState set functions require you to pass a function with a wrapper
+      setActiveViewComponentOuter(() => component);
     } else {
       initialActiveViewComponent = component;
     }
