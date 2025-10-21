@@ -71,8 +71,9 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     );
 
     useEffect(() => {
+      const unsub = router.subscribe(setCurrentRoute);
       router.init();
-      return router.subscribe(setCurrentRoute);
+      return unsub;
     }, [router]);
     return (
       <RouterContext.Provider value={contextValue}>
@@ -174,7 +175,7 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     const navigate = useNavigate();
     const rc = useRouteContext();
     const href = rc.router.computePath(to, params);
-    const isActive = rc.currentRoute.path === href;
+    const isActive = rc.router.pathMatchesCurrentRoute(to);
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
       // Only prevent default for unmodified left clicks
