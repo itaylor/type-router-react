@@ -21,12 +21,15 @@
     "jsdom": "npm:jsdom@^25.0.1"
   },
   "tasks": {
-    "test": "deno task bundle:fixtures && deno test --allow-net --allow-read --allow-env --allow-run --allow-write",
+    "test": "deno task bundle:fixtures && deno task test:unit && deno task test:browser",
+    "test:serve": "deno run --allow-net --allow-read scripts/serve-test-fixtures.ts",
+    "test:unit": "deno test  --allow-net --allow-read --allow-env --allow-run --allow-write type-router-react.test.tsx",
+    "test:browser": "deno run --allow-all scripts/start-server-and-test.ts \"deno task test:serve\" \"deno test --fail-fast --allow-net --allow-read --allow-env --allow-run --allow-write type-router-react.browser.test.ts\"",
     "lint": "deno lint",
     "fmt": "deno fmt",
     "check": "deno check && deno task lint && deno task fmt --check && deno task test",
     "build:npm": "deno run -A scripts/build_npm.ts",
-    "bundle:fixtures": "deno bundle --sourcemap=inline test-fixtures/shared-routes.tsx > test-fixtures/dist/shared-routes.js && deno bundle --sourcemap=inline test-fixtures/manual-init-routes.tsx > test-fixtures/dist/manual-init-routes.js"
+    "bundle:fixtures": "deno bundle --sourcemap=inline --outdir=test-fixtures/dist test-fixtures/*.tsx"
   },
   "lint": {
     "rules": {

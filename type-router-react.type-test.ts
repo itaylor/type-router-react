@@ -241,37 +241,213 @@ type TestComponentProps = {
 // Test Error Cases (These should cause TypeScript errors when uncommented)
 // ============================================================================
 
-/*
-// ❌ Should error: missing required params
-const _errorLink1 = <router.Link to="/user/:id">User</router.Link>;
+// ============================================================================
+// Test Error Cases with @ts-expect-error
+// ============================================================================
 
-// ❌ Should error: wrong param name
-const _errorLink2 = <router.Link to="/user/:id" params={{ wrong: '123' }}>User</router.Link>;
+// Test Link component with missing required params
+// @ts-expect-error - Should error: missing required params for parameterized route
+const _errorLink1 = router.Link({ to: '/user/:id', children: 'User' });
 
-// ❌ Should error: missing params for navigation
-const _errorNavigation = async () => {
+// Test Link component with wrong param names
+// @ts-expect-error - Should error: wrong param name 'userId' instead of 'id'
+const _errorLink2 = router.Link({
+  to: '/user/:id',
+  params: { userId: '123' },
+  children: 'User'
+});
+
+// Test Link component with extra params not in route
+// @ts-expect-error - Should error: 'extra' param not defined in route
+const _errorLink3 = router.Link({
+  to: '/user/:id',
+  params: { id: '123', extra: 'value' },
+  children: 'User'
+});
+
+// Test navigation with missing params
+// @ts-expect-error - Should error: missing required params for parameterized route
+const _errorNavigation1 = async () => {
   const navigate = router.useNavigate();
   await navigate('/user/:id'); // Missing params
 };
 
-// ❌ Should error: component props don't match route params
-const _errorComponent = makeComponentRoute({
+// Test navigation with wrong param types
+// @ts-expect-error - Should error: 'id' should be string, not number
+const _errorNavigation2 = async () => {
+  const navigate = router.useNavigate();
+  await navigate('/user/:id', { id: 123 });
+};
+
+// Test navigation with wrong param names
+// @ts-expect-error - Should error: wrong param name 'userId' instead of 'id'
+const _errorNavigation3 = async () => {
+  const navigate = router.useNavigate();
+  await navigate('/user/:id', { userId: '123' });
+};
+
+// Test navigation to non-existent route
+// @ts-expect-error - Should error: route '/nonexistent' doesn't exist in routes
+const _errorNavigation4 = async () => {
+  const navigate = router.useNavigate();
+  await navigate('/nonexistent');
+};
+
+// Test component with props that don't match route params
+// @ts-expect-error - Should error: component expects 'wrong' but route provides 'id'
+const _errorComponent1 = makeComponentRoute({
   path: '/user/:id',
   component: ({ wrong }: { wrong: string }) => <div>{wrong}</div>,
 });
 
-// ❌ Should error: invalid route path in Link
-const _errorInvalidRoute = <router.Link to="/nonexistent">Invalid</router.Link>;
-
-// ❌ Should error: fallback path must be concrete and exist in routes
-const _errorRouter = createRouterForReact(routes, {
-  fallbackPath: '/nonexistent', // Doesn't exist in routes
+// Test component with missing required props
+// @ts-expect-error - Should error: component doesn't accept 'id' param from route
+const _errorComponent2 = makeComponentRoute({
+  path: '/user/:id',
+  component: () => <div>No props</div>,
 });
 
+// Test component with wrong prop types
+// @ts-expect-error - Should error: 'id' should be string, not number
+const _errorComponent3 = makeComponentRoute({
+  path: '/user/:id',
+  component: ({ id }: { id: number }) => <div>{id}</div>,
+});
+
+// Test router with invalid fallback path (doesn't exist in routes)
+// @ts-expect-error - Should error: fallback path must exist in routes
+const _errorRouter1 = createRouterForReact(routes, {
+  fallbackPath: '/nonexistent',
+});
+
+// Test router with parameterized fallback path
+// @ts-expect-error - Should error: fallback path cannot be parameterized
 const _errorRouter2 = createRouterForReact(routes, {
-  fallbackPath: '/user/:id', // Parameterized route not allowed as fallback
+  fallbackPath: '/user/:id',
 });
-*/
+
+// Test router with wrong urlType
+// @ts-expect-error - Should error: urlType must be 'history' or 'hash'
+const _errorRouter3 = createRouterForReact(routes, {
+  urlType: 'browser',
+});
+
+// Test makeComponentRoute with mismatched types
+// @ts-expect-error - Should error: path and component props don't match
+const _errorMakeRoute1 = makeComponentRoute({
+  path: '/post/:category/:slug',
+  component: ({ id }: { id: string }) => <div>{id}</div>,
+});
+
+// Test Link to concrete path but wrong type
+// @ts-expect-error - Should error: '/users' is not a valid route (should be '/user/:id')
+const _errorLink4 = router.Link({ to: '/users', children: 'Users' });
+
+// Test complex route with missing params
+// @ts-expect-error - Should error: missing 'slug' param for '/post/:category/:slug'
+const _errorLink5 = router.Link({
+  to: '/post/:category/:slug',
+  params: { category: 'tech' },
+  children: 'Post'
+});
+
+// Test navigation with extra params
+// @ts-expect-error - Should error: 'extra' is not a valid param for this route
+const _errorNavigation5 = async () => {
+  const navigate = router.useNavigate();
+  await navigate('/about', { extra: 'value' });
+};
+
+// Test component route with no path parameter but component expects params
+// @ts-expect-error - Should error: route has no params but component expects 'id'
+const _errorComponent4 = makeComponentRoute({
+  path: '/about',
+  component: ({ id }: { id: string }) => <div>{id}</div>,
+});
+
+// Test multiple parameter route with some missing
+// @ts-expect-error - Should error: missing 'month', 'day', 'slug' params
+const _errorArticleNav = async () => {
+  const navigate = router.useNavigate();
+  await navigate('/article/:year/:month/:day/:slug', { year: '2023' });
+};
+
+// Test Link with wrong activeClassName type
+// @ts-expect-error - Should error: activeClassName should be string, not number
+const _errorLink6 = router.Link({
+  to: '/',
+  activeClassName: 123,
+  children: 'Home'
+});
+
+// Test makeComponentRoute with invalid path
+// @ts-expect-error - Should error: path must be a string literal type
+const _errorMakeRoute2 = makeComponentRoute({
+  path: 123 as any,
+  component: () => <div>Test</div>,
+});
+
+// Test navigation with null params object
+// @ts-expect-error - Should error: params object cannot be null when required
+const _errorNavigation6 = async () => {
+  const navigate = router.useNavigate();
+  await navigate('/user/:id', null as any);
+};
+
+// Test component with optional param treated as required
+// @ts-expect-error - Should error: component requires 'id' but route might not provide it
+const _errorOptionalParam = makeComponentRoute({
+  path: '/profile/:id?', // Optional param
+  component: ({ id }: { id: string }) => <div>{id.toUpperCase()}</div>,
+});
+
+// Test Link params with undefined values
+// @ts-expect-error - Should error: param values cannot be undefined
+const _errorLink7 = router.Link({
+  to: '/user/:id',
+  params: { id: undefined as any },
+  children: 'User'
+});
+
+// Test creating router with duplicate paths
+// @ts-expect-error - Should error: duplicate route paths not allowed
+const _duplicateRoutes = [
+  makeComponentRoute({ path: '/', component: () => <div>Home 1</div> }),
+  makeComponentRoute({ path: '/', component: () => <div>Home 2</div> }),
+] as const;
+
+// Test router creation with invalid routes array
+// @ts-expect-error - Should error: routes must be an array
+const _errorRoutes = createRouterForReact('not-an-array' as any, {});
+
+// Test Link with both 'to' and 'href' props
+// @ts-expect-error - Should error: cannot have both 'to' and 'href'
+const _errorLink8 = router.Link({
+  to: '/',
+  href: '/external' as any,
+  children: 'Home'
+});
+
+// Test useParams in wrong component context
+// This would be a runtime error, but TypeScript should warn about hooks usage
+const _testHooksUsage = () => {
+  // @ts-expect-error - Should error: hooks must be called within component
+  const params = router.useParams();
+  return params;
+};
+
+// Test router with onEnter callback having wrong signature
+// @ts-expect-error - Should error: onEnter callback has wrong parameter types
+const _errorRouter4 = createRouterForReact(routes, {
+  onEnter: (wrongParam: number) => console.log(wrongParam),
+});
+
+// Test makeComponentRoute with function component that returns wrong type
+// @ts-expect-error - Should error: component must return ReactNode
+const _errorComponent5 = makeComponentRoute({
+  path: '/test',
+  component: () => 123, // Should return ReactNode, not number
+});*/
 
 // ============================================================================
 // Test Complex Route Combinations
