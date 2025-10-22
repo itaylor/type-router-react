@@ -21,14 +21,14 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import React from 'react';
 
-type RouterContextValue<R extends readonly Route<string>[]> = {
+type RouterContextValue<R extends readonly ReactRoutes[]> = {
   router: Router<R>;
   activeViewComponent: React.FC<ParamsFor<R[number]['path']>> | null;
   setActiveViewComponent: React.Dispatch<
     React.SetStateAction<React.FC<ParamsFor<R[number]['path']>> | null>
   >;
+  urlType: 'hash' | 'history';
 };
 export type ComponentRoute<P extends string> = {
   path: P;
@@ -48,8 +48,10 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     | React.FC<ParamsFor<R[number]['path']>>
     | null = null;
   const realizedRoutes = realizeComponentRoutes(routes);
+  const urlType = options.urlType || 'hash'; // Default to hash mode
   const router = createRouter<R>(realizedRoutes, {
     ...options,
+    urlType,
     autoInit: false,
   });
   const RouterContext = createContext<RouterContextValue<R> | null>(null);
@@ -64,11 +66,20 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
         router,
         activeViewComponent,
         setActiveViewComponent,
+        urlType,
       }),
-      [router, activeViewComponent],
+      [router, activeViewComponent, urlType],
     );
 
     useEffect(() => {
+      // Normalize hash for hash mode routing
+      if (urlType === 'hash') {
+        const currentHash = window.location.hash;
+        if (!currentHash || currentHash === '#') {
+          window.location.hash = '#/';
+        }
+      }
+
       const unsub = router.subscribe(() => {});
       router.init();
       return unsub;
@@ -97,7 +108,9 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
         return {
           path: route.path,
           onEnter: () => {
-            setActiveViewComponentInitial(route.component);
+            setActiveViewComponentInitial(
+              route.component as React.FC<ParamsFor<R[number]['path']>>,
+            );
           },
           onExit: () => {
             setActiveViewComponentInitial(null);
@@ -204,9 +217,10 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     activeComparisonType = 'auto',
     ...rest
   }: any): ReactNode {
-    const { router } = useRouteContext();
+    const { router, urlType } = useRouteContext();
     const navigate = router.navigate;
-    const href = router.computePath(to, params);
+    const computedPath = router.computePath(to, params);
+    const href = urlType === 'hash' ? `#${computedPath}` : computedPath;
     const isActive = useIsActive(to, activeComparisonType);
 
     const handleClick = useCallback(
@@ -214,10 +228,10 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
         // Only prevent default for unmodified left clicks
         if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
           e.preventDefault();
-          navigate(href);
+          navigate(computedPath);
         }
       },
-      [navigate, href],
+      [navigate, computedPath],
     );
 
     return (

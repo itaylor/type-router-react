@@ -231,10 +231,10 @@ const routes = [
   makeComponentRoute({ path: '/404', component: NotFoundPage }),
 ] as const;
 
-// Create router
+// Create router with explicit history mode (not the new default hash mode)
 const { RouterProvider, Link, ActiveView, useNavigate, useParams, useRoute } =
   createRouterForReact(routes, {
-    urlType: 'history',
+    urlType: 'history', // Explicitly use history mode for this demo
     fallbackPath: '/404',
   });
 
