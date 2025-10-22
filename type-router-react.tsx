@@ -5,7 +5,6 @@ import type {
   Route,
   RoutePath,
   Router,
-  RouteState,
   ValidatePath,
   WithOptionalTrailingSlash,
 } from '../type-router/type-router.ts';
@@ -15,16 +14,17 @@ import {
   type ComponentPropsWithoutRef,
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from 'react';
-import type React from 'react';
+import React from 'react';
 
 type RouterContextValue<R extends readonly Route<string>[]> = {
   router: Router<R>;
-  currentRoute: RouteState<R>;
   activeViewComponent: React.FC<ParamsFor<R[number]['path']>> | null;
   setActiveViewComponent: React.Dispatch<
     React.SetStateAction<React.FC<ParamsFor<R[number]['path']>> | null>
@@ -55,7 +55,6 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
   const RouterContext = createContext<RouterContextValue<R> | null>(null);
 
   function RouterProvider({ children }: { children: React.ReactNode }) {
-    const [currentRoute, setCurrentRoute] = useState(router.getState());
     const [activeViewComponent, setActiveViewComponent] = useState<
       RouterContextValue<R>['activeViewComponent'] | null
     >(initialActiveViewComponent);
@@ -65,13 +64,12 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
         router,
         activeViewComponent,
         setActiveViewComponent,
-        currentRoute,
       }),
-      [router, activeViewComponent, currentRoute],
+      [router, activeViewComponent],
     );
 
     useEffect(() => {
-      const unsub = router.subscribe(setCurrentRoute);
+      const unsub = router.subscribe(() => {});
       router.init();
       return unsub;
     }, [router]);
@@ -119,8 +117,12 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
   }
 
   function useRoute() {
-    const rc = useRouteContext();
-    return rc.currentRoute;
+    const { router } = useRouteContext();
+    return useSyncExternalStore(
+      (callback) => router.subscribe(callback),
+      () => router.getState(),
+      () => router.getState(),
+    );
   }
 
   function useNavigate() {
@@ -134,9 +136,37 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     return rc.params;
   }
 
+  type ActiveComparisonType = 'none' | 'auto' | 'ancestor';
+  // Hook to efficiently check if a specific path is active
+  function useIsActive<P extends RoutePath<R>>(
+    path: ValidatePath<P>,
+    comparisonType: ActiveComparisonType = 'auto',
+  ) {
+    const routeState = useRoute();
+    if (comparisonType === 'none') {
+      return false;
+    }
+    if (comparisonType === 'auto') {
+      if (path.includes(':')) {
+        return routeState.route?.path === path;
+      } else {
+        return routeState.path === path;
+      }
+    }
+    if (comparisonType === 'ancestor') {
+      if (path.includes(':')) {
+        return isPathAncestor(routeState?.route?.path, path);
+      } else {
+        return isPathAncestor(routeState?.path, path);
+      }
+    }
+    return false;
+  }
+
   function ActiveView() {
     const rc = useRouteContext();
-    const { params } = rc.currentRoute;
+    const currentRoute = useRoute();
+    const { params } = currentRoute;
     const ActiveViewComponent = rc.activeViewComponent;
     if (ActiveViewComponent === null || params === null) return null;
     return <ActiveViewComponent {...params} />;
@@ -158,6 +188,7 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     className?: string;
     activeClassName?: string;
     children?: React.ReactNode;
+    activeComparisonType?: ActiveComparisonType;
   };
 
   function Link<P extends WithOptionalTrailingSlash<RoutePath<R>>>(
@@ -170,20 +201,25 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     children,
     className = '',
     activeClassName,
+    activeComparisonType = 'auto',
     ...rest
   }: any): ReactNode {
-    const navigate = useNavigate();
-    const rc = useRouteContext();
-    const href = rc.router.computePath(to, params);
-    const isActive = rc.router.pathMatchesCurrentRoute(to);
+    const { router } = useRouteContext();
+    const navigate = router.navigate;
+    const href = router.computePath(to, params);
+    const isActive = useIsActive(to, activeComparisonType);
 
-    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-      // Only prevent default for unmodified left clicks
-      if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
-        e.preventDefault();
-        navigate(href);
-      }
-    };
+    const handleClick = useCallback(
+      (e: React.MouseEvent<HTMLAnchorElement>) => {
+        // Only prevent default for unmodified left clicks
+        if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+          e.preventDefault();
+          navigate(href);
+        }
+      },
+      [navigate, href],
+    );
+
     return (
       <a
         {...rest}
@@ -207,3 +243,17 @@ export function makeComponentRoute<P extends string>(componentRoute: {
 }) {
   return componentRoute;
 }
+
+// Helper function for safe path segment matching
+function isPathAncestor(
+  currentPath: Maybe<string>,
+  ancestorPath: Maybe<string>,
+): boolean {
+  if (!currentPath || !ancestorPath) return false;
+  return currentPath === ancestorPath ||
+    currentPath.startsWith(
+      ancestorPath.endsWith('/') ? ancestorPath : ancestorPath + '/',
+    );
+}
+
+type Maybe<T> = T | undefined | null;
