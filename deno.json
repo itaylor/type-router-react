@@ -7,7 +7,7 @@
     "include": ["type-router-react.tsx", "README.md", "LICENSE"]
   },
   "imports": {
-    "@dnt/mod": "https://deno.land/x/dnt@0.39.0/mod.ts",
+    "@dnt/mod": "jsr:@deno/dnt@0.42.3",
     "@std/path": "https://deno.land/std@0.208.0/path/mod.ts",
     "@std/assert": "https://deno.land/std@0.208.0/assert/mod.ts",
     "@astral/astral": "jsr:@astral/astral@0.4.5",

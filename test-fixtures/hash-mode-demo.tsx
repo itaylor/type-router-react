@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   createRouterForReact,
@@ -28,6 +28,7 @@ function HashHomePage() {
       </p>
       <div>
         <button
+          type='button'
           className='action-button'
           onClick={() => navigate('/gallery')}
           data-testid='nav-to-gallery'
@@ -35,6 +36,7 @@ function HashHomePage() {
           Visit Gallery
         </button>
         <button
+          type='button'
           className='action-button secondary'
           onClick={() => navigate('/gallery/:category', { category: 'nature' })}
           data-testid='nav-to-nature'
@@ -52,7 +54,7 @@ function HashHomePage() {
 // Gallery Component
 function GalleryPage() {
   const navigate = useNavigate();
-  const route = useRoute();
+  const _route = useRoute();
 
   useEffect(() => {
     updateHashIndicator();
@@ -108,6 +110,7 @@ function GalleryPage() {
 
       <div>
         <button
+          type='button'
           className='action-button secondary'
           onClick={() => navigate('/settings')}
           data-testid='nav-to-settings'
@@ -194,6 +197,7 @@ function CategoryGalleryPage({ category }: { category: string }) {
 
       <div>
         <button
+          type='button'
           className='action-button'
           onClick={() => navigate('/gallery')}
           data-testid='back-to-gallery'
@@ -201,6 +205,7 @@ function CategoryGalleryPage({ category }: { category: string }) {
           ← Back to Gallery
         </button>
         <button
+          type='button'
           className='action-button secondary'
           onClick={() =>
             navigate('/gallery/:category/:id', {
@@ -290,6 +295,7 @@ function PhotoDetailPage({ category, id }: { category: string; id: string }) {
 
           <div style={{ marginTop: '20px' }}>
             <button
+              type='button'
               className='action-button'
               onClick={() =>
                 navigate('/gallery/:category/:id', {
@@ -301,6 +307,7 @@ function PhotoDetailPage({ category, id }: { category: string; id: string }) {
               ← Previous
             </button>
             <button
+              type='button'
               className='action-button'
               onClick={() =>
                 navigate('/gallery/:category/:id', {
@@ -317,6 +324,7 @@ function PhotoDetailPage({ category, id }: { category: string; id: string }) {
 
       <div style={{ marginTop: '24px' }}>
         <button
+          type='button'
           className='action-button secondary'
           onClick={() => navigate('/gallery/:category', { category })}
           data-testid='back-to-category'
@@ -430,8 +438,9 @@ function SettingsPage() {
         </div>
 
         <button
+          type='button'
           className='action-button'
-          onClick={() => alert('Settings saved!')}
+          onClick={() => console.log('Settings saved!')}
           data-testid='save-settings'
         >
           Save Settings
@@ -440,9 +449,10 @@ function SettingsPage() {
 
       <div style={{ marginTop: '24px' }}>
         <button
+          type='button'
           className='action-button secondary'
-          onClick={() => navigate('/gallery')}
-          data-testid='back-to-gallery-from-settings'
+          onClick={() => navigate('/')}
+          data-testid='back-to-home'
         >
           ← Back to Gallery
         </button>

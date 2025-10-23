@@ -250,17 +250,19 @@ type TestComponentProps = {
 const _errorLink1 = router.Link({ to: '/user/:id' });
 
 // Test Link component with wrong param names
-// @ts-expect-error - Should error: wrong param name 'userId' instead of 'id'
 const _errorLink2 = router.Link({
+  // @ts-expect-error - Should error: wrong param name 'userId' instead of 'id'
   to: '/user/:id',
+  // @ts-expect-error - Should error: wrong param name 'userId' instead of 'id'
   params: { userId: '123' },
   children: 'User',
 });
 
 // Test Link component with extra params not in route
-// @ts-expect-error - Should error: 'extra' param not defined in route
 const _errorLink3 = router.Link({
+  // @ts-expect-error - Should error: 'extra' param not defined in route
   to: '/user/:id',
+  // @ts-expect-error - Should error: 'extra' param not defined in route
   params: { id: '123', extra: 'value' },
   children: 'User',
 });
@@ -296,15 +298,21 @@ const _errorNavigation4 = async () => {
 // Test component with props that don't match route params
 const _errorComponent1 = makeComponentRoute({
   path: '/user/:id',
-  // @ts-expect-error - Should error: component expects 'wrong' but route provides 'id'
-  component: ({ wrong }: { wrong: string }) => null,
+  // @ts-expect-error - Should error: wrong is not a valid parameter
+  component: ({ wrong }: { wrong: string }) => {
+    wrong.toString();
+    return null;
+  },
 });
 
 // Test component with wrong prop types
 const _errorComponent3 = makeComponentRoute({
   path: '/user/:id',
   // @ts-expect-error - Should error: 'id' should be string, not number
-  component: ({ id }: { id: number }) => null,
+  component: ({ id }: { id: number }) => {
+    id.toString();
+    return null;
+  },
 });
 
 // Test router with invalid fallback path (doesn't exist in routes)
@@ -329,7 +337,10 @@ const _errorRouter3 = createRouterForReact(routes, {
 const _errorMakeRoute1 = makeComponentRoute({
   path: '/post/:category/:slug',
   // @ts-expect-error - Should error: path and component props don't match
-  component: ({ id }: { id: string }) => null,
+  component: ({ id }: { id: string }) => {
+    id.toString();
+    return null;
+  },
 });
 
 // Test Link to concrete path but wrong type
@@ -337,9 +348,10 @@ const _errorMakeRoute1 = makeComponentRoute({
 const _errorLink4 = router.Link({ to: '/users', children: 'Users' });
 
 // Test complex route with missing params
-// @ts-expect-error - Should error: missing 'slug' param for '/post/:category/:slug'
 const _errorLink5 = router.Link({
+  // @ts-expect-error - Should error: missing 'slug' param for '/post/:category/:slug'
   to: '/post/:category/:slug',
+  // @ts-expect-error - Should error: missing 'slug' param for '/post/:category/:slug'
   params: { category: 'tech' },
   children: 'Post',
 });
@@ -354,7 +366,10 @@ const _errorNavigation5 = async () => {
 const _errorComponent4 = makeComponentRoute({
   path: '/about',
   // @ts-expect-error - Should error: route has no params but component expects 'id'
-  component: ({ id }: { id: string }) => null,
+  component: ({ id }: { id: string }) => {
+    id.toString();
+    return null;
+  },
 });
 
 // Test multiple parameter route with some missing
@@ -366,6 +381,7 @@ const _errorArticleNav = async () => {
 
 // Test Link with wrong activeClassName type
 const _errorLink6 = router.Link({
+  // @ts-expect-error - Should error: activeClassName should be string, not number
   to: '/',
   // @ts-expect-error - Should error: activeClassName should be string, not number
   activeClassName: 123,
@@ -387,9 +403,10 @@ const _errorNavigation6 = async () => {
 };
 
 // Test Link params with undefined values
-// @ts-expect-error - Should error: param values cannot be undefined
 const _errorLink7 = router.Link({
+  // @ts-expect-error - Should error: param values cannot be undefined
   to: '/user/:id',
+  // @ts-expect-error - Should error: param values cannot be undefined
   params: { id: undefined },
   children: 'User',
 });

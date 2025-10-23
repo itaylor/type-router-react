@@ -67,8 +67,9 @@ await build({
   compilerOptions: {
     target: 'ES2020',
     lib: ['ES2020', 'DOM'],
-    jsx: 'react-jsx',
-    jsxImportSource: 'react',
+    // put these back once https://github.com/denoland/dnt/issues/384 is closed
+    //    jsx: 'react-jsx',
+    //    jsxImportSource: 'react',
   },
   typeCheck: 'both',
   declaration: 'separate',

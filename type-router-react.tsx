@@ -1,7 +1,11 @@
 import type {
   ConcretePathForUnion,
+  FindFullRouteForPath,
+  IsValidPathOnly,
   Options,
   ParamsFor,
+  ParamsForPathOnly,
+  PathOnly,
   Route,
   RoutePath,
   Router,
@@ -39,7 +43,14 @@ type ReactRoutes = Route<string> | ComponentRoute<string>;
 export function createRouterForReact<const R extends readonly ReactRoutes[]>(
   routes: R,
   options: Partial<Options<R>>,
-) {
+): {
+  Link: typeof Link;
+  ActiveView: typeof ActiveView;
+  RouterProvider: typeof RouterProvider;
+  useNavigate: typeof useNavigate;
+  useParams: typeof useParams;
+  useRoute: typeof useRoute;
+} {
   type Path = R[number]['path'];
   let setActiveViewComponentOuter: React.Dispatch<
     React.SetStateAction<React.FC<ParamsFor<R[number]['path']>> | null>
@@ -185,18 +196,6 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     return <ActiveViewComponent {...params} />;
   }
 
-  type LinkPropsConcrete<S extends string> = LinkBase & {
-    to: ValidatePath<ConcretePathForUnion<RoutePath<R>, S>>;
-  };
-
-  type LinkPropsParams<P extends WithOptionalTrailingSlash<RoutePath<R>>> =
-    & LinkBase
-    & {
-      to: P;
-      params?: ParamsFor<P>;
-    };
-
-  // type LinkBase = React.ReactHTMLElement<HTMLAnchorElement>['props'] & {
   type LinkBase = ComponentPropsWithoutRef<'a'> & {
     className?: string;
     activeClassName?: string;
@@ -204,10 +203,63 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     activeComparisonType?: ActiveComparisonType;
   };
 
+  /*
+   * Link Component Overloads - Mirror NavigateFn Type Restrictions
+   *
+   * The Link component now implements 4 overloads that mirror the navigate() function's
+   * type restrictions to provide consistent type safety:
+   *
+   * 1. Full route path with required params - for routes like '/user/:id'
+   *    Requires `params` prop with correct parameter types
+   *
+   * 2. Concrete path with no params - for concrete paths like '/about'
+   *    No `params` prop needed or allowed
+   *
+   * 3. Path-only with conditional params - for path-only patterns
+   *    Conditionally requires params based on route existence
+   *
+   * 4. Concrete path-only with required params - for concrete path patterns
+   *    Requires params matching the full route definition
+   *
+   * This provides the same type safety as navigate() including:
+   * - Parameter name validation (e.g. 'id' not 'userId')
+   * - Required parameter enforcement for parameterized routes
+   * - Prevention of extra/invalid parameters
+   * - Proper TypeScript errors for type violations
+   */
+
+  // Overload 1: Full route path with params
   function Link<P extends WithOptionalTrailingSlash<RoutePath<R>>>(
-    props: LinkPropsParams<P>,
+    props: LinkBase & {
+      to: ValidatePath<P>;
+      params: ParamsFor<P>;
+    },
   ): ReactNode;
-  function Link<S extends string>(props: LinkPropsConcrete<S>): ReactNode;
+
+  // Overload 2: Concrete path (no params required)
+  function Link<S extends string>(
+    props: LinkBase & {
+      to: ValidatePath<ConcretePathForUnion<RoutePath<R>, S>>;
+    },
+  ): ReactNode;
+
+  // Overload 3: Path-only with conditional params
+  function Link<P extends WithOptionalTrailingSlash<PathOnly<RoutePath<R>>>>(
+    props: LinkBase & {
+      to: ValidatePath<P>;
+      params: IsValidPathOnly<P, R> extends true ? ParamsForPathOnly<P, R>
+        : never;
+    },
+  ): ReactNode;
+
+  // Overload 4: Concrete path-only with params
+  function Link<S extends string>(
+    props: LinkBase & {
+      to: ValidatePath<ConcretePathForUnion<PathOnly<RoutePath<R>>, S>>;
+      params: ParamsFor<FindFullRouteForPath<S, RoutePath<R>>>;
+    },
+  ): ReactNode;
+
   function Link<P extends Path>({
     to,
     params,
@@ -254,7 +306,10 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
 export function makeComponentRoute<P extends string>(componentRoute: {
   path: P;
   component: React.FC<ParamsFor<P>>;
-}) {
+}): {
+  path: P;
+  component: React.FC<ParamsFor<P>>;
+} {
   return componentRoute;
 }
 

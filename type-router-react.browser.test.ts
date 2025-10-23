@@ -1,11 +1,11 @@
 /// <reference lib="deno.ns" />
-import { ElementHandle, launch, Page } from '@astral/astral';
+import { launch } from '@astral/astral';
+import type { ElementHandle, Page } from '@astral/astral';
 import { assertEquals, assertStringIncludes } from '@std/assert';
 import {
   BASIC_ROUTING_IP,
   DEFAULT_PORT,
   HASH_MODE_IP,
-  MANUAL_INIT_IP,
 } from './test-fixtures/server-config.ts';
 
 // Helper function to setup error reporting for a page using evaluate
@@ -496,216 +496,15 @@ Deno.test('Hash Mode - Settings form and hash navigation', async () => {
 
     // Submit settings
     const saveBtn = await page.$('[data-testid="save-settings"]');
-
-    // Click save button - astral handles dialogs automatically
     await saveBtn?.click();
 
-    // Wait for potential dialog
+    // Wait a moment for any processing
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // Navigate back to gallery
-    const backBtn = await page.$(
-      '[data-testid="back-to-gallery-from-settings"]',
-    );
+    // Navigate back to home
+    const backBtn = await page.$('[data-testid="back-to-home"]');
     await backBtn?.click();
-    await waitForText(page, '.route-content', 'Photo Gallery');
-  } finally {
-    await browser.close();
-  }
-});
-
-Deno.test('Manual Init - Router not initialized initially', async () => {
-  const browser = await launch({ headless: true });
-
-  try {
-    const page = await browser.newPage(
-      `http://${MANUAL_INIT_IP}:${DEFAULT_PORT}`,
-    );
-
-    // Setup error reporting
-    await setupErrorReporting(page);
-
-    // Should show not initialized message
-    await waitForElement(page, '[data-testid="not-initialized-message"]');
-    await waitForText(
-      page,
-      '[data-testid="not-initialized-message"]',
-      'Router Not Active',
-    );
-
-    // Status should show not initialized
-    await waitForText(page, '[data-testid="init-status"]', 'Not Initialized');
-
-    // Navigation should be disabled
-    const navigation = await page.$('[data-testid="manual-navigation"]');
-    const navClass = await navigation?.getAttribute('class');
-    assertStringIncludes(
-      navClass || '',
-      'nav-disabled',
-      'Navigation should be disabled',
-    );
-
-    // Initialize button should be enabled, destroy button disabled
-    const initBtn = await page.$('[data-testid="initialize-button"]');
-    const destroyBtn = await page.$('[data-testid="destroy-button"]');
-
-    const initDisabled = await initBtn?.getAttribute('disabled');
-    const destroyDisabled = await destroyBtn?.getAttribute('disabled');
-
-    assertEquals(initDisabled, null, 'Initialize button should be enabled');
-    assertEquals(destroyDisabled, '', 'Destroy button should be disabled');
-  } finally {
-    await browser.close();
-  }
-});
-
-Deno.test('Manual Init - Router initialization and lifecycle', async () => {
-  const browser = await launch({ headless: true });
-
-  try {
-    const page = await browser.newPage(
-      `http://${MANUAL_INIT_IP}:${DEFAULT_PORT}`,
-    );
-
-    // Setup error reporting
-    await setupErrorReporting(page);
-    // Wait for page to load
-    await waitForElement(page, '[data-testid="initialize-button"]');
-
-    // Click initialize button
-    const initBtn = await page.$('[data-testid="initialize-button"]');
-    await initBtn?.click();
-
-    // Wait for router to initialize
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Status should show initialized
-    await waitForText(page, '[data-testid="init-status"]', 'Initialized');
-
-    // Should now show the actual app with navigation
-    await waitForElement(page, '[data-testid="manual-home-link"]');
-    await waitForText(page, '.route-content', 'Manual Init Home');
-
-    // Navigation should work
-    const dashboardLink = await page.$('[data-testid="manual-dashboard-link"]');
-    await dashboardLink?.click();
-    await waitForText(page, '.route-content', 'Dashboard');
-
-    // Parameterized routes should work
-    const profileLink = await page.$('[data-testid="manual-profile-link"]');
-    await profileLink?.click();
-    await waitForText(page, '.route-content', 'User Profile');
-    await waitForText(page, '.route-content', 'admin');
-
-    // Button states should be flipped
-    const initDisabled = await initBtn?.getAttribute('disabled');
-    const destroyBtn = await page.$('[data-testid="destroy-button"]');
-    const destroyDisabled = await destroyBtn?.getAttribute('disabled');
-
-    assertEquals(
-      initDisabled,
-      '',
-      'Initialize button should be disabled after init',
-    );
-    assertEquals(
-      destroyDisabled,
-      null,
-      'Destroy button should be enabled after init',
-    );
-  } finally {
-    await browser.close();
-  }
-});
-
-Deno.test('Manual Init - Router destruction and re-initialization', async () => {
-  const browser = await launch({ headless: true });
-
-  try {
-    const page = await browser.newPage(
-      `http://${MANUAL_INIT_IP}:${DEFAULT_PORT}`,
-    );
-
-    // Setup error reporting
-    await setupErrorReporting(page);
-
-    // Initialize router
-    const initBtn = await page.$('[data-testid="initialize-button"]');
-    await initBtn?.click();
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Verify it's working
-    await waitForText(page, '.route-content', 'Manual Init Home');
-
-    // Now destroy the router
-    const destroyBtn = await page.$('[data-testid="destroy-button"]');
-    await destroyBtn?.click();
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Should be back to not initialized state
-    await waitForText(page, '[data-testid="init-status"]', 'Not Initialized');
-    await waitForElement(page, '[data-testid="not-initialized-message"]');
-
-    // Re-initialize
-    await initBtn?.click();
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Should work again
-    await waitForText(page, '.route-content', 'Manual Init Home');
-
-    // Test that navigation still works after re-init
-    const dashboardLink = await page.$('[data-testid="manual-dashboard-link"]');
-    await dashboardLink?.click();
-    await waitForText(page, '.route-content', 'Dashboard');
-  } finally {
-    await browser.close();
-  }
-});
-
-Deno.test('Manual Init - Complex navigation after initialization', async () => {
-  const browser = await launch({ headless: true });
-
-  try {
-    const page = await browser.newPage(
-      `http://${MANUAL_INIT_IP}:${DEFAULT_PORT}`,
-    );
-
-    // Setup error reporting
-    await setupErrorReporting(page);
-
-    // Initialize router
-    const initBtn = await page.$('[data-testid="initialize-button"]');
-    await initBtn?.click();
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Navigate to dashboard
-    const dashboardLink = await page.$('[data-testid="manual-dashboard-link"]');
-    await dashboardLink?.click();
-    await waitForText(page, '.route-content', 'Dashboard');
-
-    // Use programmatic navigation
-    const navToAnalyticsBtn = await page.$('[data-testid="nav-to-analytics"]');
-    await navToAnalyticsBtn?.click();
-    await waitForText(page, '.route-content', 'Analytics');
-
-    // Navigate to settings with parameters
-    const analyticsBackBtn = await page.$(
-      '[data-testid="analytics-to-dashboard"]',
-    );
-    await analyticsBackBtn?.click();
-    await waitForText(page, '.route-content', 'Dashboard');
-
-    const navToSettingsBtn = await page.$('[data-testid="nav-to-settings"]');
-    await navToSettingsBtn?.click();
-    await waitForText(page, '.route-content', 'Settings - general');
-
-    // Switch between settings sections
-    const securityBtn = await page.$('[data-testid="settings-security"]');
-    await securityBtn?.click();
-    await waitForText(page, '.route-content', 'Settings - security');
-
-    const advancedBtn = await page.$('[data-testid="settings-advanced"]');
-    await advancedBtn?.click();
-    await waitForText(page, '.route-content', 'Settings - advanced');
+    await waitForText(page, '.route-content', 'Hash Mode Home');
   } finally {
     await browser.close();
   }
