@@ -240,6 +240,265 @@ function App() {
 }
 ```
 
+### Recommended Usage pattern
+
+Make a `routes.ts` file that imports `@itaylor/type-router-react` declares the routes, calls `createRouterForReact` and exports `Link`, `ActiveView`, `RouterProvider`, and any of the other functions you need.
+
+Now when you use them, import them from the `routes.ts` file, they will always have the correct types for the routes, without you ever having to manually declare the types again.
+
+*routes.ts*:
+```tsx
+import {
+  createRouterForReact,
+  makeComponentRoute,
+} from '@itaylor/type-router-react';
+import Home from './components/Home';
+import About from './components/About';
+import Contact from './components/Contact';
+
+const routes = [
+  makeComponentRoute({ path: '/', component: Home }),
+  makeComponentRoute({ path: '/about?search', component: About }),
+  makeComponentRoute({ path: '/contact', component: Contact }),
+] as const;
+
+const router = createRouterForReact(routes, { fallbackPath: '/' });
+
+export const {
+  Link,
+  ActiveView,
+  RouterProvider,
+  useNavigate,
+  useRoute,
+} = router;
+```
+
+*App.tsx*
+```tsx
+import { Link, ActiveView } from './routes';
+
+export default function App() {
+  return (
+    <div>
+      <header>
+        <nav>
+          <Link to="/">Home</Link>
+          <Link to="/about">About</Link>
+          <Link to="/contact">Contact</Link>
+        </nav>
+      </header>
+      <main>
+        <ActiveView />
+      </main>
+    </div>
+  );
+```
+
+
+### Query Parameters
+
+type-router-react inherits powerful query parameter support from the base type-router library. Query parameters are declared directly in route paths and provide type-safe, optional parameters that don't affect route matching.
+
+#### Declaring Query Parameters
+
+Query parameters are declared using the syntax `?param1&param2&param3` after the path:
+
+```tsx
+import {
+  createRouterForReact,
+  makeComponentRoute,
+} from '@itaylor/type-router-react';
+
+// Component that handles search with optional query parameters
+function SearchPage({ q, category, sort }: {
+  q?: string;
+  category?: string;
+  sort?: string;
+}) {
+  return (
+    <div>
+      <h1>Search Results</h1>
+      <p>Query: {q || 'No query'}</p>
+      <p>Category: {category || 'All'}</p>
+      <p>Sort: {sort || 'Default'}</p>
+    </div>
+  );
+}
+
+// Component for product pages with mixed path and query parameters
+function ProductPage({ id, color, size, variant }: {
+  id: string;           // Required path parameter
+  color?: string;       // Optional query parameter
+  size?: string;        // Optional query parameter
+  variant?: string;     // Optional query parameter
+}) {
+  return (
+    <div>
+      <h1>Product: {id}</h1>
+      <p>Color: {color || 'Default'}</p>
+      <p>Size: {size || 'Standard'}</p>
+      <p>Variant: {variant || 'Basic'}</p>
+    </div>
+  );
+}
+
+const { RouterProvider, Link, ActiveView, useNavigate } = createRouterForReact([
+  makeComponentRoute({ path: '/', component: Home }),
+  makeComponentRoute({ path: '/search?q&category&sort', component: SearchPage }),
+  makeComponentRoute({ path: '/product/:id?color&size&variant', component: ProductPage }),
+] as const, {});
+```
+
+#### Navigation with Query Parameters
+
+The enhanced path-only navigation supports three equivalent patterns:
+
+```tsx
+function NavigationExample() {
+  const navigate = useNavigate();
+
+  const handleSearch = async () => {
+    // 1. Path template (enhanced) - most readable
+    await navigate('/search?q&category&sort', {
+      q: 'typescript',
+      category: 'programming',
+      sort: 'newest',
+    });
+
+    // 2. Concrete path (enhanced) - works with any matching route
+    await navigate('/search', {
+      q: 'react',
+      category: 'frontend',
+    });
+
+    // 3. Traditional (still works)
+    await navigate('/search?q&category&sort', {
+      q: 'vue',
+      category: 'frontend',
+      sort: 'popular',
+    });
+  };
+
+  const handleProduct = async () => {
+    // Mixed path and query parameters
+    await navigate('/product/:id', {
+      id: 'laptop123',      // Required path parameter
+      color: 'silver',      // Optional query parameter
+      size: '15inch',       // Optional query parameter
+      variant: 'premium',   // Optional query parameter
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={handleSearch}>Search</button>
+      <button onClick={handleProduct}>View Product</button>
+    </div>
+  );
+}
+```
+
+#### Links with Query Parameters
+
+The Link component fully supports query parameters with type safety:
+
+```tsx
+function NavigationLinks() {
+  return (
+    <nav>
+      {/* Links with query parameters */}
+      <Link
+        to="/search?q&category&sort"
+        params={{ q: 'react', category: 'tutorials' }}
+      >
+        React Tutorials
+      </Link>
+
+      {/* Mixed path and query parameters */}
+      <Link
+        to="/product/:id?color&size"
+        params={{
+          id: 'phone456',
+          color: 'blue',
+          size: '6.1inch'
+        }}
+      >
+        Blue Phone
+      </Link>
+
+      {/* Links work without query parameters too */}
+      <Link to="/search">Search (no filters)</Link>
+    </nav>
+  );
+}
+```
+
+#### Using Query Parameters in Components
+
+Access query parameters through the component props or hooks:
+
+```tsx
+function ProductDetails() {
+  const params = useParams(); // Gets all parameters (path + query)
+
+  // TypeScript knows the exact types based on the current route
+  return (
+    <div>
+      <h1>Product: {params.id}</h1>
+      {params.color && <p>Color: {params.color}</p>}
+      {params.size && <p>Size: {params.size}</p>}
+      {params.variant && <p>Variant: {params.variant}</p>}
+    </div>
+  );
+}
+
+// Alternative: Direct prop injection for component routes
+function SearchResults({ q, category, sort }: {
+  q?: string;
+  category?: string;
+  sort?: string;
+}) {
+  // Props are automatically injected from route parameters
+  const hasFilters = category || sort;
+
+  return (
+    <div>
+      <h1>Search: {q || 'All'}</h1>
+      {hasFilters && (
+        <div className="filters">
+          {category && <span>Category: {category}</span>}
+          {sort && <span>Sort: {sort}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+#### Key Features
+
+- **Path parameters are required** (`string`) - extracted from URL path segments
+- **Query parameters are optional** (`string | undefined`) - declared after `?`
+- **Path parameters trump query parameters** with the same name
+- **URL encoding/decoding** is handled automatically
+- **Only declared parameters** are extracted; undeclared params are ignored
+- **Query parameters don't affect route matching** - only the path part matters
+- **Full TypeScript support** - parameter types are automatically inferred
+
+```tsx
+// Example showing parameter precedence
+const router = createRouterForReact([
+  makeComponentRoute({
+    path: '/user/:id?id&settings',
+    component: UserPage
+  }),
+] as const, {});
+
+// When navigating to: /user/alice?id=ignored&settings=dark
+// params.id === 'alice' (from path), not 'ignored' (from query)
+// params.settings === 'dark' (from query)
+```
+
 ## API Reference
 
 ### `createRouterForReact(routes, options?)`
@@ -381,60 +640,6 @@ const protectedRoutes = [
     },
   },
 ] as const;
-```
-
-### Loading States
-
-```tsx
-function App() {
-  const [loading, setLoading] = useState(false);
-
-  const router = useMemo(() =>
-    createRouterForReact(routes, {
-      onEnter: () => setLoading(true),
-      onExit: () => setLoading(false),
-    }), []);
-
-  return (
-    <router.RouterProvider>
-      {loading && <LoadingSpinner />}
-      <router.ActiveView />
-    </router.RouterProvider>
-  );
-}
-```
-
-### Error Boundaries
-
-```tsx
-class RouteErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <div>Something went wrong with routing.</div>;
-    }
-
-    return this.props.children;
-  }
-}
-
-function App() {
-  return (
-    <RouterProvider>
-      <RouteErrorBoundary>
-        <ActiveView />
-      </RouteErrorBoundary>
-    </RouterProvider>
-  );
-}
 ```
 
 ### Integration with State Management
