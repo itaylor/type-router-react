@@ -629,39 +629,6 @@ const route = useRoute();
 console.log(route.path, route.params, route.route);
 ```
 
-## Advanced Usage
-
-### Conditional Rendering
-
-```tsx
-function ConditionalApp() {
-  const route = useRoute();
-  const isUserPage = route.route?.path === '/user/:id';
-
-  return (
-    <RouterProvider>
-      {isUserPage && <UserSidebar />}
-      <ActiveView />
-    </RouterProvider>
-  );
-}
-```
-
-### Route Guards
-
-```tsx
-const protectedRoutes = [
-  {
-    path: '/dashboard',
-    onEnter: () => {
-      if (!isAuthenticated()) {
-        throw new Error('Authentication required');
-      }
-    },
-  },
-] as const;
-```
-
 ### Integration with State Management
 
 ```tsx
@@ -732,59 +699,12 @@ function UserComponent() {
 }
 ```
 
-## Migration from type-router
-
-If you're migrating from the base type-router library:
-
-```tsx
-// Before (type-router)
-import { createRouter } from '@itaylor/type-router';
-
-const router = createRouter(
-  [
-    {
-      path: '/user/:id',
-      onEnter: (params) => {
-        // Manual DOM manipulation
-        document.getElementById('app').innerHTML =
-          `<div>User: ${params.id}</div>`;
-      },
-    },
-  ] as const,
-);
-
-// After (type-router-react)
-import {
-  createRouterForReact,
-  makeComponentRoute,
-} from '@itaylor/type-router-react';
-
-const UserComponent = ({ id }: { id: string }) => <div>User: {id}</div>;
-
-const { RouterProvider, ActiveView } = createRouterForReact(
-  [
-    makeComponentRoute({ path: '/user/:id', component: UserComponent }),
-  ] as const,
-  {},
-);
-
-function App() {
-  return (
-    <RouterProvider>
-      <ActiveView />
-    </RouterProvider>
-  );
-}
-```
-
 ## Examples
 
-Check out the `/examples` directory for complete working examples including:
+Check out the `/examples` and `test-fixtures` directories for complete working examples including:
 
 - Basic routing setup
 - Advanced patterns
-- Integration with popular libraries
-- Server-side rendering considerations
 
 ## License
 
