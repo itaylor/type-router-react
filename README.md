@@ -242,11 +242,16 @@ function App() {
 
 ### Recommended Usage pattern
 
-Make a `routes.ts` file that imports `@itaylor/type-router-react` declares the routes, calls `createRouterForReact` and exports `Link`, `ActiveView`, `RouterProvider`, and any of the other functions you need.
+Make a `routes.ts` file that imports `@itaylor/type-router-react` declares the
+routes, calls `createRouterForReact` and exports `Link`, `ActiveView`,
+`RouterProvider`, and any of the other functions you need.
 
-Now when you use them, import them from the `routes.ts` file, they will always have the correct types for the routes, without you ever having to manually declare the types again.
+Now when you use them, import them from the `routes.ts` file, they will always
+have the correct types for the routes, without you ever having to manually
+declare the types again.
 
-*routes.ts*:
+_routes.ts_:
+
 ```tsx
 import {
   createRouterForReact,
@@ -273,7 +278,8 @@ export const {
 } = router;
 ```
 
-*App.tsx*
+_App.tsx_
+
 ```tsx
 import { Link, ActiveView } from './routes';
 
@@ -294,14 +300,16 @@ export default function App() {
   );
 ```
 
-
 ### Query Parameters
 
-type-router-react inherits powerful query parameter support from the base type-router library. Query parameters are declared directly in route paths and provide type-safe, optional parameters that don't affect route matching.
+type-router-react inherits powerful query parameter support from the base
+type-router library. Query parameters are declared directly in route paths and
+provide type-safe, optional parameters that don't affect route matching.
 
 #### Declaring Query Parameters
 
-Query parameters are declared using the syntax `?param1&param2&param3` after the path:
+Query parameters are declared using the syntax `?param1&param2&param3` after the
+path:
 
 ```tsx
 import {
@@ -327,10 +335,10 @@ function SearchPage({ q, category, sort }: {
 
 // Component for product pages with mixed path and query parameters
 function ProductPage({ id, color, size, variant }: {
-  id: string;           // Required path parameter
-  color?: string;       // Optional query parameter
-  size?: string;        // Optional query parameter
-  variant?: string;     // Optional query parameter
+  id: string; // Required path parameter
+  color?: string; // Optional query parameter
+  size?: string; // Optional query parameter
+  variant?: string; // Optional query parameter
 }) {
   return (
     <div>
@@ -342,11 +350,20 @@ function ProductPage({ id, color, size, variant }: {
   );
 }
 
-const { RouterProvider, Link, ActiveView, useNavigate } = createRouterForReact([
-  makeComponentRoute({ path: '/', component: Home }),
-  makeComponentRoute({ path: '/search?q&category&sort', component: SearchPage }),
-  makeComponentRoute({ path: '/product/:id?color&size&variant', component: ProductPage }),
-] as const, {});
+const { RouterProvider, Link, ActiveView, useNavigate } = createRouterForReact(
+  [
+    makeComponentRoute({ path: '/', component: Home }),
+    makeComponentRoute({
+      path: '/search?q&category&sort',
+      component: SearchPage,
+    }),
+    makeComponentRoute({
+      path: '/product/:id?color&size&variant',
+      component: ProductPage,
+    }),
+  ] as const,
+  {},
+);
 ```
 
 #### Navigation with Query Parameters
@@ -382,10 +399,10 @@ function NavigationExample() {
   const handleProduct = async () => {
     // Mixed path and query parameters
     await navigate('/product/:id', {
-      id: 'laptop123',      // Required path parameter
-      color: 'silver',      // Optional query parameter
-      size: '15inch',       // Optional query parameter
-      variant: 'premium',   // Optional query parameter
+      id: 'laptop123', // Required path parameter
+      color: 'silver', // Optional query parameter
+      size: '15inch', // Optional query parameter
+      variant: 'premium', // Optional query parameter
     });
   };
 
@@ -408,7 +425,7 @@ function NavigationLinks() {
     <nav>
       {/* Links with query parameters */}
       <Link
-        to="/search?q&category&sort"
+        to='/search?q&category&sort'
         params={{ q: 'react', category: 'tutorials' }}
       >
         React Tutorials
@@ -416,18 +433,18 @@ function NavigationLinks() {
 
       {/* Mixed path and query parameters */}
       <Link
-        to="/product/:id?color&size"
+        to='/product/:id?color&size'
         params={{
           id: 'phone456',
           color: 'blue',
-          size: '6.1inch'
+          size: '6.1inch',
         }}
       >
         Blue Phone
       </Link>
 
       {/* Links work without query parameters too */}
-      <Link to="/search">Search (no filters)</Link>
+      <Link to='/search'>Search (no filters)</Link>
     </nav>
   );
 }
@@ -465,7 +482,7 @@ function SearchResults({ q, category, sort }: {
     <div>
       <h1>Search: {q || 'All'}</h1>
       {hasFilters && (
-        <div className="filters">
+        <div className='filters'>
           {category && <span>Category: {category}</span>}
           {sort && <span>Sort: {sort}</span>}
         </div>
@@ -487,12 +504,15 @@ function SearchResults({ q, category, sort }: {
 
 ```tsx
 // Example showing parameter precedence
-const router = createRouterForReact([
-  makeComponentRoute({
-    path: '/user/:id?id&settings',
-    component: UserPage
-  }),
-] as const, {});
+const router = createRouterForReact(
+  [
+    makeComponentRoute({
+      path: '/user/:id?id&settings',
+      component: UserPage,
+    }),
+  ] as const,
+  {},
+);
 
 // When navigating to: /user/alice?id=ignored&settings=dark
 // params.id === 'alice' (from path), not 'ignored' (from query)

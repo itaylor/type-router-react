@@ -42,7 +42,7 @@
   "compilerOptions": {
     "lib": ["dom", "es2022"],
     "jsx": "react-jsx",
-    "jsxImportSource": "npm:react",
+    "jsxImportSource": "npm:react@^19.2.0",
     "jsxImportSourceTypes": "@types/react"
   }
 }

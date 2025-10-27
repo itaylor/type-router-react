@@ -14,6 +14,7 @@ import type {
 } from '@itaylor/type-router';
 import { createRouter } from '@itaylor/type-router';
 export { makeRoute } from '@itaylor/type-router';
+import type * as React from 'react';
 import {
   type ComponentPropsWithoutRef,
   createContext,
@@ -40,17 +41,60 @@ export type ComponentRoute<P extends string> = {
 };
 type ReactRoutes = Route<string> | ComponentRoute<string>;
 
+interface RouterForReactReturn<R extends readonly ReactRoutes[]> {
+  Link: {
+    <P extends WithOptionalTrailingSlash<RoutePath<R>>>(
+      props: ComponentPropsWithoutRef<'a'> & {
+        className?: string;
+        activeClassName?: string;
+        children?: React.ReactNode;
+        activeComparisonType?: 'none' | 'auto' | 'ancestor';
+        to: ValidatePath<P>;
+        params: ParamsFor<P>;
+      },
+    ): ReactNode;
+    <S extends string>(
+      props: ComponentPropsWithoutRef<'a'> & {
+        className?: string;
+        activeClassName?: string;
+        children?: React.ReactNode;
+        activeComparisonType?: 'none' | 'auto' | 'ancestor';
+        to: ValidatePath<ConcretePathForUnion<RoutePath<R>, S>>;
+      },
+    ): ReactNode;
+    <P extends WithOptionalTrailingSlash<PathOnly<RoutePath<R>>>>(
+      props: ComponentPropsWithoutRef<'a'> & {
+        className?: string;
+        activeClassName?: string;
+        children?: React.ReactNode;
+        activeComparisonType?: 'none' | 'auto' | 'ancestor';
+        to: ValidatePath<P>;
+        params: IsValidPathOnly<P, R> extends true ? ParamsForPathOnly<P, R>
+          : never;
+      },
+    ): ReactNode;
+    <S extends string>(
+      props: ComponentPropsWithoutRef<'a'> & {
+        className?: string;
+        activeClassName?: string;
+        children?: React.ReactNode;
+        activeComparisonType?: 'none' | 'auto' | 'ancestor';
+        to: ValidatePath<ConcretePathForUnion<PathOnly<RoutePath<R>>, S>>;
+        params: ParamsFor<FindFullRouteForPath<S, RoutePath<R>>>;
+      },
+    ): ReactNode;
+  };
+  ActiveView: () => ReactNode;
+  RouterProvider: ({ children }: { children: React.ReactNode }) => ReactNode;
+  useNavigate: () => Router<R>['navigate'];
+  useParams: () => ParamsFor<RoutePath<R>>;
+  useRoute: () => ReturnType<Router<R>['getState']>;
+}
+
 export function createRouterForReact<const R extends readonly ReactRoutes[]>(
   routes: R,
   options: Partial<Options<R>>,
-): {
-  Link: typeof Link;
-  ActiveView: typeof ActiveView;
-  RouterProvider: typeof RouterProvider;
-  useNavigate: typeof useNavigate;
-  useParams: typeof useParams;
-  useRoute: typeof useRoute;
-} {
+): RouterForReactReturn<R> {
   type Path = R[number]['path'];
   let setActiveViewComponentOuter: React.Dispatch<
     React.SetStateAction<React.FC<ParamsFor<R[number]['path']>> | null>

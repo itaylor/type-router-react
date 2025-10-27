@@ -381,7 +381,6 @@ const _errorArticleNav = async () => {
 
 // Test Link with wrong activeClassName type
 const _errorLink6 = router.Link({
-  // @ts-expect-error - Should error: activeClassName should be string, not number
   to: '/',
   // @ts-expect-error - Should error: activeClassName should be string, not number
   activeClassName: 123,
