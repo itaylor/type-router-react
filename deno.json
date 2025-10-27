@@ -1,12 +1,13 @@
 {
   "name": "@itaylor/type-router-react",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "React bindings for type-router - A lightweight, type-safe router with first-class TypeScript support",
   "exports": "./type-router-react.tsx",
   "publish": {
     "include": ["type-router-react.tsx", "README.md", "LICENSE"]
   },
   "imports": {
+    "@itaylor/type-router": "jsr:@itaylor/type-router@0.0.1",
     "@dnt/mod": "jsr:@deno/dnt@0.42.3",
     "@std/path": "https://deno.land/std@0.208.0/path/mod.ts",
     "@std/assert": "https://deno.land/std@0.208.0/assert/mod.ts",
@@ -14,11 +15,7 @@
     "@types/react": "npm:@types/react@^19.2.2",
     "@types/react-dom": "npm:@types/react-dom@^19.2.2",
     "react": "npm:react@^19.2.0",
-    "react-dom": "npm:react-dom@^19.2.0",
-    "@testing-library/react": "npm:@testing-library/react@^16.1.0",
-    "@testing-library/jest-dom": "npm:@testing-library/jest-dom@^6.6.3",
-    "@testing-library/user-event": "npm:@testing-library/user-event@^14.5.2",
-    "jsdom": "npm:jsdom@^25.0.1"
+    "react-dom": "npm:react-dom@^19.2.0"
   },
   "tasks": {
     "test": "deno task bundle:fixtures && deno task test:unit && deno task test:browser",

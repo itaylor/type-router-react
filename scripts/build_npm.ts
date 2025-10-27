@@ -2,6 +2,7 @@
 // Run with: deno run -A scripts/build_npm.ts
 
 import { build, emptyDir } from '@dnt/mod';
+import denoJson from '../deno.json' with { type: 'json' };
 
 await emptyDir('./npm');
 
@@ -22,9 +23,8 @@ await build({
   },
   package: {
     name: '@itaylor/type-router-react',
-    version: '1.0.0',
-    description:
-      'React bindings for type-router - A lightweight, type-safe router with first-class TypeScript support',
+    version: denoJson.version,
+    description: denoJson.description,
     keywords: [
       'react',
       'router',
@@ -50,12 +50,17 @@ await build({
       node: '>=14.0.0',
     },
     peerDependencies: {
-      'react': '>=16.8.0',
-      'react-dom': '>=16.8.0',
+      'react': '>=18.0.0',
+      'react-dom': '>=18.0.0',
     },
     devDependencies: {
       '@types/react': '^18.0.0',
       '@types/react-dom': '^18.0.0',
+    },
+    homepage: 'https://github.com/itaylor/type-router-react',
+    repository: {
+      type: 'git',
+      url: 'https://github.com/itaylor/type-router-react.git',
     },
   },
   postBuild() {
@@ -77,9 +82,9 @@ await build({
   test: false,
   mappings: {
     // Map the type-router dependency to the published npm package
-    '../type-router/type-router.ts': {
+    '@itaylor/type-router': {
       name: '@itaylor/type-router',
-      version: '^1.0.0',
+      version: '^0.0.1',
     },
   },
 });

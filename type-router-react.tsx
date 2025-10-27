@@ -11,9 +11,9 @@ import type {
   Router,
   ValidatePath,
   WithOptionalTrailingSlash,
-} from '../type-router/type-router.ts';
-import { createRouter } from '../type-router/type-router.ts';
-export { makeRoute } from '../type-router/type-router.ts';
+} from '@itaylor/type-router';
+import { createRouter } from '@itaylor/type-router';
+export { makeRoute } from '@itaylor/type-router';
 import {
   type ComponentPropsWithoutRef,
   createContext,

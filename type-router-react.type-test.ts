@@ -7,7 +7,7 @@
  * (commented out) to verify the type system is working as expected.
  */
 
-import type { ParamsFor } from '../type-router/type-router.ts';
+import type { ParamsFor } from '@itaylor/type-router';
 import {
   type ComponentRoute,
   createRouterForReact,
