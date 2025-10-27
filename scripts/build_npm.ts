@@ -68,6 +68,18 @@ await build({
     Deno.copyFileSync('README.md', 'npm/README.md');
     Deno.copyFileSync('LICENSE', 'npm/LICENSE');
     console.log('✅ README.md and LICENSE copied to npm directory');
+
+    // Deletes the dependencies key out of the npm/package.json file.
+    // This project only has peer deps and a dep on type-router-react, which
+    // it looks like DNT includes as a copy.
+    const packageJsonPath = 'npm/package.json';
+    const packageJson = JSON.parse(Deno.readTextFileSync(packageJsonPath));
+    delete packageJson.dependencies;
+    Deno.writeTextFileSync(
+      packageJsonPath,
+      JSON.stringify(packageJson, null, 2),
+    );
+    console.log('✅ Dependencies key deleted from npm/package.json');
   },
   compilerOptions: {
     target: 'ES2020',
@@ -80,13 +92,7 @@ await build({
   declaration: 'separate',
   scriptModule: false,
   test: false,
-  mappings: {
-    // Map the type-router dependency to the published npm package
-    '@itaylor/type-router': {
-      name: '@itaylor/type-router',
-      version: '^0.0.1',
-    },
-  },
+  mappings: {},
 });
 
 console.log('✅ npm package built successfully!');

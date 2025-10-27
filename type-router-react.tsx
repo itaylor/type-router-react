@@ -14,11 +14,17 @@ import type {
 } from '@itaylor/type-router';
 import { createRouter } from '@itaylor/type-router';
 export { makeRoute } from '@itaylor/type-router';
-import type * as React from 'react';
-import {
+// These are needed because dnt does not support the newest JSX yet,
+// and needs React to be imported.
+// deno-lint-ignore verbatim-module-syntax no-unused-vars
+import React, {
   type ComponentPropsWithoutRef,
   createContext,
+  type Dispatch,
+  type FC,
+  type MouseEvent,
   type ReactNode,
+  type SetStateAction,
   useCallback,
   useContext,
   useEffect,
@@ -29,15 +35,15 @@ import {
 
 type RouterContextValue<R extends readonly ReactRoutes[]> = {
   router: Router<R>;
-  activeViewComponent: React.FC<ParamsFor<R[number]['path']>> | null;
-  setActiveViewComponent: React.Dispatch<
-    React.SetStateAction<React.FC<ParamsFor<R[number]['path']>> | null>
+  activeViewComponent: FC<ParamsFor<R[number]['path']>> | null;
+  setActiveViewComponent: Dispatch<
+    SetStateAction<FC<ParamsFor<R[number]['path']>> | null>
   >;
   urlType: 'hash' | 'history';
 };
 export type ComponentRoute<P extends string> = {
   path: P;
-  component: React.FC<ParamsFor<P>>;
+  component: FC<ParamsFor<P>>;
 };
 type ReactRoutes = Route<string> | ComponentRoute<string>;
 
@@ -47,7 +53,7 @@ interface RouterForReactReturn<R extends readonly ReactRoutes[]> {
       props: ComponentPropsWithoutRef<'a'> & {
         className?: string;
         activeClassName?: string;
-        children?: React.ReactNode;
+        children?: ReactNode;
         activeComparisonType?: 'none' | 'auto' | 'ancestor';
         to: ValidatePath<P>;
         params: ParamsFor<P>;
@@ -57,7 +63,7 @@ interface RouterForReactReturn<R extends readonly ReactRoutes[]> {
       props: ComponentPropsWithoutRef<'a'> & {
         className?: string;
         activeClassName?: string;
-        children?: React.ReactNode;
+        children?: ReactNode;
         activeComparisonType?: 'none' | 'auto' | 'ancestor';
         to: ValidatePath<ConcretePathForUnion<RoutePath<R>, S>>;
       },
@@ -66,7 +72,7 @@ interface RouterForReactReturn<R extends readonly ReactRoutes[]> {
       props: ComponentPropsWithoutRef<'a'> & {
         className?: string;
         activeClassName?: string;
-        children?: React.ReactNode;
+        children?: ReactNode;
         activeComparisonType?: 'none' | 'auto' | 'ancestor';
         to: ValidatePath<P>;
         params: IsValidPathOnly<P, R> extends true ? ParamsForPathOnly<P, R>
@@ -77,7 +83,7 @@ interface RouterForReactReturn<R extends readonly ReactRoutes[]> {
       props: ComponentPropsWithoutRef<'a'> & {
         className?: string;
         activeClassName?: string;
-        children?: React.ReactNode;
+        children?: ReactNode;
         activeComparisonType?: 'none' | 'auto' | 'ancestor';
         to: ValidatePath<ConcretePathForUnion<PathOnly<RoutePath<R>>, S>>;
         params: ParamsFor<FindFullRouteForPath<S, RoutePath<R>>>;
@@ -85,7 +91,7 @@ interface RouterForReactReturn<R extends readonly ReactRoutes[]> {
     ): ReactNode;
   };
   ActiveView: () => ReactNode;
-  RouterProvider: ({ children }: { children: React.ReactNode }) => ReactNode;
+  RouterProvider: ({ children }: { children: ReactNode }) => ReactNode;
   useNavigate: () => Router<R>['navigate'];
   useParams: () => ParamsFor<RoutePath<R>>;
   useRoute: () => ReturnType<Router<R>['getState']>;
@@ -96,11 +102,11 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
   options: Partial<Options<R>>,
 ): RouterForReactReturn<R> {
   type Path = R[number]['path'];
-  let setActiveViewComponentOuter: React.Dispatch<
-    React.SetStateAction<React.FC<ParamsFor<R[number]['path']>> | null>
+  let setActiveViewComponentOuter: Dispatch<
+    SetStateAction<FC<ParamsFor<R[number]['path']>> | null>
   >;
   let initialActiveViewComponent:
-    | React.FC<ParamsFor<R[number]['path']>>
+    | FC<ParamsFor<R[number]['path']>>
     | null = null;
   const realizedRoutes = realizeComponentRoutes(routes);
   const urlType = options.urlType || 'hash'; // Default to hash mode
@@ -111,7 +117,7 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
   });
   const RouterContext = createContext<RouterContextValue<R> | null>(null);
 
-  function RouterProvider({ children }: { children: React.ReactNode }) {
+  function RouterProvider({ children }: { children: ReactNode }) {
     const [activeViewComponent, setActiveViewComponent] = useState<
       RouterContextValue<R>['activeViewComponent'] | null
     >(initialActiveViewComponent);
@@ -147,7 +153,7 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
   }
 
   function setActiveViewComponentInitial(
-    component: React.FC<ParamsFor<R[number]['path']>> | null,
+    component: FC<ParamsFor<R[number]['path']>> | null,
   ) {
     if (setActiveViewComponentOuter) {
       // React useState set functions require you to pass a function with a wrapper
@@ -164,7 +170,7 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
           path: route.path,
           onEnter: () => {
             setActiveViewComponentInitial(
-              route.component as React.FC<ParamsFor<R[number]['path']>>,
+              route.component as FC<ParamsFor<R[number]['path']>>,
             );
           },
           onExit: () => {
@@ -243,7 +249,7 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
   type LinkBase = ComponentPropsWithoutRef<'a'> & {
     className?: string;
     activeClassName?: string;
-    children?: React.ReactNode;
+    children?: ReactNode;
     activeComparisonType?: ActiveComparisonType;
   };
 
@@ -320,7 +326,7 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
     const isActive = useIsActive(to, activeComparisonType);
 
     const handleClick = useCallback(
-      (e: React.MouseEvent<HTMLAnchorElement>) => {
+      (e: MouseEvent<HTMLAnchorElement>) => {
         // Only prevent default for unmodified left clicks
         if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
           e.preventDefault();
@@ -349,10 +355,10 @@ export function createRouterForReact<const R extends readonly ReactRoutes[]>(
 
 export function makeComponentRoute<P extends string>(componentRoute: {
   path: P;
-  component: React.FC<ParamsFor<P>>;
+  component: FC<ParamsFor<P>>;
 }): {
   path: P;
-  component: React.FC<ParamsFor<P>>;
+  component: FC<ParamsFor<P>>;
 } {
   return componentRoute;
 }

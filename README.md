@@ -701,7 +701,8 @@ function UserComponent() {
 
 ## Examples
 
-Check out the `/examples` and `test-fixtures` directories for complete working examples including:
+Check out the `/examples` and `test-fixtures` directories for complete working
+examples including:
 
 - Basic routing setup
 - Advanced patterns
