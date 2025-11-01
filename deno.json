@@ -1,6 +1,6 @@
 {
   "name": "@itaylor/type-router-react",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "React bindings for type-router - A lightweight, type-safe router with first-class TypeScript support",
   "exports": "./type-router-react.tsx",
   "publish": {

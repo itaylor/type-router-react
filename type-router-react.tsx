@@ -14,6 +14,19 @@ import type {
 } from '@itaylor/type-router';
 import { createRouter } from '@itaylor/type-router';
 export { makeRoute } from '@itaylor/type-router';
+export type {
+  ConcretePathForUnion,
+  FindFullRouteForPath,
+  IsValidPathOnly,
+  ParamsFor,
+  ParamsForPathOnly,
+  PathOnly,
+  Route,
+  RoutePath,
+  Router,
+  ValidatePath,
+  WithOptionalTrailingSlash,
+} from '@itaylor/type-router';
 // These are needed because dnt does not support the newest JSX yet,
 // and needs React to be imported.
 // deno-lint-ignore verbatim-module-syntax no-unused-vars
@@ -45,9 +58,9 @@ export type ComponentRoute<P extends string> = {
   path: P;
   component: FC<ParamsFor<P>>;
 };
-type ReactRoutes = Route<string> | ComponentRoute<string>;
+export type ReactRoutes = Route<string> | ComponentRoute<string>;
 
-interface RouterForReactReturn<R extends readonly ReactRoutes[]> {
+export interface RouterForReactReturn<R extends readonly ReactRoutes[]> {
   Link: {
     <P extends WithOptionalTrailingSlash<RoutePath<R>>>(
       props: ComponentPropsWithoutRef<'a'> & {
